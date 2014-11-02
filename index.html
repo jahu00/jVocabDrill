@@ -6,7 +6,7 @@
         <meta name="msapplication-tap-highlight" content="no" />
         <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
-        <title>Rikaikyun</title>
+        <title>jVocabDrill</title>
 		<style>
 			html
 			{
@@ -134,24 +134,19 @@
 			function newQuestion(_wordList, _words)
 			{
 				$('.question, .answers').html("");
-				/*var questionId = Math.floor(Math.random() * _wordList.length);
-				var question = _wordList[questionId];
-				var answers = [questionId];
-				while (answers.length < 5)
-				{
-					var answerId = Math.floor(Math.random() * _wordList.length);
-					if (answerId != questionId)
-					{
-						answers.push(answerId);
-					}
-				}*/
 				var answers = [];
 				var knownWords = [];
-				for (var i = 0; i < _wordList.length && answers.length < 5; i++)
+				var wordPool = 10;
+				var newWords = 7;
+				var numberOfAnswers = 5;
+				// Pool possible questions
+				for (var i = 0; i < _wordList.length && answers.length < wordPool; i++)
 				{
-					if (answers.length == 4 && knownWords.length > 0)
+					if (answers.length >= newWords && knownWords.length > 0)
 					{
-						answers.push(knownWords[Math.floor(Math.random() * knownWords.length)]);
+						var knownWordId = Math.floor(Math.random() * knownWords.length);
+						answers.push(knownWord[knownWordId]);
+						knownWords.splice(knownWordId, 1)
 						continue;
 					}
 					var answer = _wordList[i];
@@ -166,6 +161,12 @@
 						knownWords.push(answer);
 					}
 				}
+				// Randomly number of questions
+				while (answers.length > numberOfAnswers)
+				{
+					answers.splice(Math.floor(Math.random() * answers.length), 1);
+				}
+				// Pick question to ask and keep the rest as alternative answers
 				var questionId = 0;
 				if (answers.length > 1)
 				{
@@ -179,18 +180,22 @@
 					}
 					var questionId = tempAnswerIds[Math.floor(Math.random() * tempAnswerIds.length)];
 				}
-				//var questionId = Math.floor(Math.random() * answers.length);
 				var question = answers[questionId];
 				lastWord = question.word;
 				$('.question').html('<h1>' + question.word + '</h1>');
 				while (answers.length > 0)
 				{
 					var answerId = Math.floor(Math.random() * answers.length);
-					//var answerId = answers[tempAnswerId];
-					var answer = answers[answerId];//(answerId != questionId ? _wordList[answerId] : question);
+					var answer = answers[answerId];
+					var correctAnswer = answer.word == question.word;
 					var definition = getDefinition(answer.word, dict);
+					if (correctAnswer)
+					{
+						var answerKana = definition.match(/\[(.*?)\]/)[1];
+						$('.question').append('<h3>' + answerKana + '</h3>');
+					}
 					var translation = definition.split('/').slice(1, -1).join(';');
-					$('.answers').append('<div class="answer ' + (answer.word == question.word ? "correct" : "") + '">' + translation + '</div>');
+					$('.answers').append('<div class="answer ' + (correctAnswer ? "correct" : "") + '">' + translation + '</div>');
 					answers.splice(answerId,1);
 				}
 			}
@@ -226,17 +231,11 @@
 						{
 							wordList.push(new WordEntry(_word, _weight));
 						}
-						else
+						/*else
 						{
 							console.log(_weight, _word);
-						}
+						}*/
 					}
-					
-					/*var word = words[_word];
-					if (typeof word == "undefined")
-					{
-						words[_word] = new WordStats();
-					}*/
 				}
 				localStorage["words"] = JSON.stringify(words);
 				//$.get()
