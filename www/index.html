@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <title>jVocabDrill</title>
+		<link rel="stylesheet" type="text/css" href="./css/style.css">
+    </head>
+    <body>
+		<div class="screen" id="select">
+			<div class="drillList">
+				<div class=""></div>
+			</div>
+		</div>
+		<div class="screen" id="drill" style="display:none">
+			<div class="questionContainer">
+				<div class="progress">
+					<div class="bar"></div>
+					<span>0.00%<span>
+				</div>
+				<div class="question">
+				</div>
+			</div>
+			<div class="answers"></div>
+		</div>
+		<script type="text/javascript" src="cordova.js"></script>
+		<script src="./rikaikun/data.js"></script>
+		<script src="./jquery-1.8.3.min.js"></script>
+		<script src="./wordlist.js"></script>
+		<script src="./drill.js"></script>
+        <script type="text/javascript">
+			function WordStats()//_word)
+			{
+				//this.word = _word;
+				this.weight = 0;
+				this.correct = 0;
+				this.wrong = 0;
+			}
+			$(function()
+			{
+				var dict = new rcxDict(false);
+
+				var words = {};
+				var wordLists = [];
+				var drill = null;
+				
+				document.addEventListener("deviceready", function(){
+					document.addEventListener("backbutton", function(e)
+					{
+						if (drill != null)
+						{
+							drill == null;
+							$('#drill').hide();
+							$('#select').show();
+							e.preventDefault();
+						}
+						else
+						{
+							navigator.app.exitApp();
+						}
+					}, false);
+				});
+				
+				if (typeof localStorage["words"] != "undefined" && JSON.parse(localStorage["words"]) != null)
+				{
+					words = JSON.parse(localStorage["words"]);
+				}
+				function loadList(file)
+				{
+					var wordList = new WordList(words, dict, file);
+					wordLists.push(wordList);
+					$('.drillList').append('<div class="item" data-id="' + (wordLists.length - 1) + '">' + file + ' (' + wordList.calculateProcentage() + '%)</div>')
+				}
+				//console.log(words);
+				//wordLists.push(new WordList(words, dict, "word_freq_report.txt"));
+				//wordLists.push(new WordList(words, dict, "ch0128.word_freq.txt"));
+				loadList("word_freq_report.txt");
+				for (var i = 1; i <= 50; i++)
+				{
+					loadList("ch (" + i + ").txt");
+				}
+				$('.drillList .item').click(function()
+				{
+					$('#select').hide();
+					drill = new Drill(words, dict, wordLists[$(this).attr('data-id')]);
+				});
+				//var drill = new Drill(words, dict, wordLists[0]);
+			});
+        </script>
+    </body>
+</html>
